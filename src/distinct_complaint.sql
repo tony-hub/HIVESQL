@@ -4,7 +4,7 @@ set hive.exec.dynamic.partition.mode=nonstrict;
 set hive.auto.convert.join=true;
 set hive.exec.max.dynamic.partitions.pernode=100000;
 
-insert into table service_security.complaint_info_com_ts
+insert into table service_security.general_complaint_info_com
 PARTITION(year,month,day)
 select
 order_id,
@@ -64,7 +64,16 @@ d_work_day,
 d_active_day,
 d_average_level,
 d_star_level,
+d_low_star_ratio,
+d_cancle_rate,
+d_tousulv,
 d_service_score,
+d_punish_num,
+d_one_star_orders,
+d_two_star_orders,
+d_three_star_orders,
+d_four_star_orders,
+d_five_star_orders,
 p_age,
 p_gender,
 p_phone_model,
@@ -81,6 +90,9 @@ p_complaint_orders,
 p_complaint_by_driver,
 p_total_cancel_orders,
 p_night_peak,
+p_complaint_orders_all ,
+p_complaint_by_driver_all,
+p_cancel_after_count,
 complaint_result,
 valid,
 path,
@@ -94,7 +106,7 @@ year,
 month,
 day
 from(
-select *,row_number() over (partition by order_id order by content desc) num from service_security.complaint_info
+select *,row_number() over (partition by order_id order by content desc) num from service_security.general_complaint_info
  ) t
 where t.num=1
 distribute by(year,month,day);"

@@ -74,8 +74,8 @@ select driver_id,punish_num from driver_punish where concat_ws('-',year,month,da
 )as a
 JOIN
 (
-select driver_id,count(*) as punish_num,year,month,day
-from gulfstream_ods.g_driver_punish_log where method!=9 and exec_status=1 and a_status=1
-and concat_ws('-',year,month,day)='2015-11-19' group by driver_id,year,month,day
+select driver_id,sum(count(*)) as punish_num,year,month,day from gulfstream_ods.g_driver_punish_log where method not in(9,3)  and exec_status=1 and a_status=1 and concat_ws('-',year,month,day)<='2015-11-18' group by driver_id,year,month,day
 )as b
 on a.driver_id=b.driver_id;
+
+

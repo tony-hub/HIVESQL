@@ -1,100 +1,72 @@
+#!/bin/bash
+start=$1
+years=`date -d "$start" +%Y`
+months=`date -d "$start" +%m`
+days=`date -d "$start" +%d`
+
+hive  --hiveconf mapreduce.job.queuename=pingtaijishubu-gonggongpingtai.commonapi -e"
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.merge.mapredfiles = true;
+
+INSERT INTO TABLE service_security.driver_info_all
+PARTITION(year,month,day)
 select
-(case when cic.driver_id is null then doi.driver_id else cic.driver_id end) as driver_id,
-
-(case when driver.one_star_orders is null then 0 else driver.one_star_orders end )+
-(case when doi.one_star_orders is null then 0 else doi.one_star_orders end )as one_star_orders,
-
-(case when driver.two_star_orders is null then 0 else driver.two_star_orders end )+
-(case when doi.two_star_orders is null then 0 else doi.two_star_orders end )as two_star_orders,
-
-(case when driver.three_star_orders is null then 0 else driver.three_star_orders end )+
-(case when doi.three_star_orders is null then 0 else doi.three_star_orders end)as three_star_orders,
-
-(case when driver.four_star_orders is null then 0 else driver.four_star_orders end)+
-(case when doi.four_star_orders is null then 0 else doi.four_star_orders end)as four_star_orders,
-
-(case when driver.five_star_orders is null then 0 else driver.five_star_orders end)+
-(case when doi.five_star_orders is null then 0 else doi.five_star_orders end)as five_star_orders,
-
-(case when punish.punish_num is null then 0 else punish.punish_num end )+
-(case when doi.forbidden_num is null then 0 else doi.forbidden_num end)as punish_num,
-$years,
-$months,
-$days
+driver.driver_id,
+driver.one_star_orders,
+driver.two_star_orders,
+driver.three_star_orders,
+driver.four_star_orders,
+driver.five_star_orders,
+'$years' as year,
+'$months' as month,
+'$days' as day
 from
 (
-select driver_id, one_star_orders, two_star_orders, three_star_orders, four_star_orders,
-five_star_orders
-from  gulfstream_dw.dw_m_driver_order where concat_ws('-',year,month,day)='$start'
+select driver_id from gulfstream_dw.dw_v_driver_base where concat_ws('-',year,month,day)='$start'
+) driver_base
+left outer join
+(
+select driver_id, sum(one_star_orders) as one_star_orders,sum(two_star_orders) as two_star_orders,
+sum(three_star_orders) as three_star_orders,sum(four_star_orders) as four_star_orders,
+sum(five_star_orders) as five_star_orders
+from  gulfstream_dw.dw_m_driver_order where concat_ws('-',year,month,day)<'$start'
+group by driver_id
 )driver
-join(
-select driver_id from service_security.complaint_info_com
-where concat_ws('-',year,month,day)='$start'
-)cic
-on cic.driver_id=driver.driver_id
-LEFT OUTER  JOIN
-(
-select driver_id,punish_num from service_security.driver_punish
-where concat_ws('-',year,month,day)='$start'
-)punish
-on punish.driver_id=cic.driver_id
-full outer join
-(
-select driver_id, one_star_orders, two_star_orders, three_star_orders, four_star_orders,
-five_star_orders,forbidden_num
-from service_security.driver_order_info where concat_ws('-',year,month,day)=''
-)doi
-on doi.driver_id=cic.driver_id
-distribute by(year,month,day);
+on driver_base.driver_id=driver.driver_id
+distribute by(year,month,day);"
+#!/bin/bash
+start=$1
+start1=`date -d "1 day ago $start" +%Y-%m-%d`
+years=`date -d "$start" +%Y`
+months=`date -d "$start" +%m`
+days=`date -d "$start" +%d`
 
+spark-sql --driver-memory 8g --conf spark.driver.maxResultSize=12g --queue pingtaijishubu-gonggongpingtai.commonapi -e"
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.merge.mapredfiles = true;
 
-create table if not exists service_security.redup_normal_info_bak
-like  service_security.normal_info_bak
-LOCATION 'hdfs://mycluster-tj/user/common_plat_security/data/service_security/redup_normal_info_bak';
-
-
-create table if not exists service_security.im_info_normal
-like  service_security.im_info
-LOCATION 'hdfs://mycluster-tj/user/common_plat_security/data/service_security/im_info_normal';
-
-
+INSERT INTO TABLE service_security.passenger_order_info_normal
+PARTITION(year,month,day)
 select
-im_tbl.order_id,
-cic.order_status,
-im_tbl.contents,
-im_tbl.uid,
-im_tbl.peer_uid
-year,
-month,
-day
+b.pas_id,
+a.passenger_complaint_orders,
+a.driver_complaint_orders,
+a.cancel_before_count,
+a.cancel_after_count,
+'$years'as year,
+'$months' as month,
+'$days' as day
 from
 (
-select
-dlc_decode(param['oids']) as order_id,param['uid'] as uid,param['peer_uid'] as peer_uid,concat_ws(':',param['role'],param['contents']) as contents,
-param['timestamp'] as tms
-From beatles_ods.imbroker
-where param['prod'] in('258','260') and param['optype']='sendmsg'
-and param['oids'] is not null and  concat_ws('-',year,month,day)='2015-09-01'
-group by param['oids'],param['role'],param['contents'],param['timestamp']
-)im_tbl
-join
+select pas_id from gulfstream_dw.dw_v_passenger_base where concat_ws('-',year,month,day)='$start'
+)b
+left outer join
 (
-select order_status,order_id,year,month,day from
-redup_normal_info_bak where concat_ws('-',year,month,day)='$start'
-)cic
-on cic.order_id=im_tbl.order_id
-distribute by(year,month,day);
-
-select
-param['oids'] as order_id,param['uid'] as uid,param['peer_uid'] as peer_uid,concat_ws(':',param['role'],param['contents']) as contents,
-param['timestamp'] as tms
-From beatles_ods.imbroker
-where param['prod'] in('258','260') and param['optype']='sendmsg'
-and param['oids'] is not null and  concat_ws('-',year,month,day)='2015-09-01'
-group by param['oids'],param['uid'],param['peer_uid'],param['role'],param['contents'],param['timestamp']
-
-
-
-
-
-select count(*),concat_ws('-',year,month,day) from driver_order_info where concat_ws('-',year,month,day)<='2016-05-01' group by year,month ,day;
+select pas_id,sum(passenger_complaint_orders) as passenger_complaint_orders,
+sum(driver_complaint_orders) as driver_complaint_orders ,
+sum(cancel_before_count) as cancel_before_count,
+sum(cancel_after_count) as cancel_after_count from gulfstream_dw.dw_m_passenger_order
+where concat_ws('-',year,month,day)<'$start' group by pas_id
+)a
+on a.pas_id=b.pas_id
+distribute by(year,month,day);"

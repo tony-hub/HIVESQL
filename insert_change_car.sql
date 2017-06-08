@@ -46,3 +46,23 @@ LOCATION
 select a.orderid,concat_ws(';',a.contents) as contents from (
 select orderid,concat_ws(':',order_status,contents)as contents from im_info_normal  group by orderid,order_status,contents)a group by a.orderid;
 
+select
+driver.driver_id,
+driver.one_star_orders,
+driver.two_star_orders,
+driver.three_star_orders,
+driver.four_star_orders,
+driver.five_star_orders
+from
+(
+select driver_id, sum(one_star_orders) as one_star_orders,sum(two_star_orders) as two_star_orders,
+sum(three_star_orders) as three_star_orders,sum(four_star_orders) as four_star_orders,
+sum(five_star_orders) as five_star_orders
+from  gulfstream_dw.dw_m_driver_order where concat_ws('-',year,month,day)<='2015-09-07'
+group by driver_id
+)driver
+join(
+select driver_id from service_security.major_complaint_info_com
+where concat_ws('-',year,month,day)='$start'
+)cic
+on cic.driver_id=driver.driver_id
