@@ -70,3 +70,46 @@ where concat_ws('-',year,month,day)<'$start' group by pas_id
 )a
 on a.pas_id=b.pas_id
 distribute by(year,month,day);"
+
+
+from
+(select * from poi)e
+select  e.order_id limit 100;
+> select
+    > order_id,
+    > driver_id,
+    > passenger_id,
+    > round(normal_distance/cast(start_dest_distance/1000.0 as double),4)as distance_rate,
+    > round(cast( (unix_timestamp(finish_time)-unix_timestamp(begin_charge_time) )/60 as double)/forecast_time,4) as time_rate
+    > from major_complaint_info_com
+    > where concat_ws('-',year,month,day)='2017-05-24' and finish_time!='0000-00-00 00:00:00' and begin_charge_time !='0000-00-00 00:00:00'
+    > and start_dest_distance!=0 ;
+ selec driver_city_name from gulfstream_dw.dw_v_driver_base where driver_city_name like '%县%' limit 10
+
+ Create table service_security.d_applist(
+driver_id BIGINT COMMENT'ID',
+name string COMMENT'身份证号码归属地'
+)
+ROW format delimited
+ fields terminated by ' '
+LOCATION
+  'hdfs://mycluster-tj/user/common_plat_security/data/service_security/d_identify';
+   load data local inpath '/home/common_plat_security/dlc/city.txt' into table d_identify;"
+   select eventid,uid  ,passengerid,app_name,os_version,brand from omega.native_daily limit 100
+
+   select uid, regexp_replace(attrs['installed_apps'],'\n', ' ') as installed_apps from omega.native_daily
+   where concat(year,month,day)='20170520' and appid in (5,6) and eventid='OMGODAT' and
+   attrs['installed_apps'] is not null   and uid=565115708768944;
+   and passengerid is not null and passengerid!=0
+
+   565461165681193
+   driver_id  passenger_id
+565115708768944 3162985144209
+567950153944281 3061115066249
+
+select order_status,  count(*) from gulfstream_dw.dw_v_order_base where concat_ws('-',year,month,day)='2017-05-24'
+and product_id in(1,2) and order_status in(5,7,11,12)  group by order_status;
+
+   select uid,count(*) from omega.native_daily
+   where concat(year,month,day)='20170319' and appid in (5,6) and eventid='OMGODAT' and
+   attrs['installed_apps'] is not null  group by uid;

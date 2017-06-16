@@ -1,4 +1,4 @@
-CREATE TABLE service_security.general_complaint_info_com
+CREATE TABLE service_security.major_com
 (
 order_id bigint COMMENT'订单ID',
 driver_id bigint COMMENT'司机ID',
@@ -97,11 +97,12 @@ content    string COMMENT'投诉说明',
 deal_status  int COMMENT'工单处理状态,1.未处理，2进行中，3.完成',
 business_type  int COMMENT'客户业务类型,1专车,2打车',
 driver_passenger_complaint int COMMENT'是否司乘互投，0代表不是，1代表是司乘互投',
-complaint_type int COMMENT'1表示乘客投诉司机，2表示司机投诉乘客'
+complaint_type int COMMENT'1表示乘客投诉司机，2表示司机投诉乘客',
+customer_type int
 )
 PARTITIONED BY (
   `year` string,
   `month` string,
   `day` string)
 LOCATION
-  'hdfs://mycluster-tj/user/common_plat_security/data/service_security/general_complaint_info_com';
+  'hdfs://mycluster-tj/user/common_plat_security/data/service_security/major_com';

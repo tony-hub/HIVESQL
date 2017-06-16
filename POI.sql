@@ -1,4 +1,4 @@
-Create table Service_security.POI
+Create table Service_security.POI_NORMAL
 (
 dest_district_code  string              COMMENT'终点行政区编码',
 dest_district_name  string              COMMENT'终点行政区名称',
@@ -19,7 +19,7 @@ ROW FORMAT SERDE   'org.apache.hadoop.hive.ql.io.orc.OrcSerde'
 STORED AS INPUTFORMAT   'org.apache.hadoop.hive.ql.io.orc.OrcInputFormat'
 OUTPUTFORMAT   'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
 LOCATION
-  'hdfs://mycluster-tj/user/common_plat_security/data/service_security/POI';
+  'hdfs://mycluster-tj/user/common_plat_security/data/service_security/POI_NORMAL';
 
 
 

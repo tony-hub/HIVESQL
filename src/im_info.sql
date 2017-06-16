@@ -32,6 +32,7 @@ where param['prod'] in('258','260') and param['optype']='sendmsg'
 and param['oids'] is not null and  concat_ws('-',year,month,day)='2015-09-01'
 group by param['oids'],param['role'],param['contents'],param['timestamp']
 )im_tbl
+semin left join
 join
 (
 select complaint_result,order_status,content,path,order_id,year,month,day from

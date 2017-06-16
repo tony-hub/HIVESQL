@@ -1,4 +1,4 @@
-countCREATE TABLE service_security.passenger_order_info(
+CREATE TABLE service_security.passenger_all_info(
 pas_id              bigint      COMMENT'乘客ID',
 passenger_complaint_orders string          COMMENT'快专车乘客投诉司机数',
 driver_complaint_orders	 string             COMMENT '快专车司机投诉乘客数',
@@ -9,7 +9,10 @@ PARTITIONED BY(
 `year` STRING,
 `month` STRING,
 `day` STRING)
-LOCATION 'hdfs://mycluster-tj/user/common_plat_security/data/service_security/passenger_order_info';
+ROW FORMAT SERDE   'org.apache.hadoop.hive.ql.io.orc.OrcSerde'
+STORED AS INPUTFORMAT   'org.apache.hadoop.hive.ql.io.orc.OrcInputFormat'
+OUTPUTFORMAT   'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
+LOCATION 'hdfs://mycluster-tj/user/common_plat_security/data/service_security/passenger_all_info';
 
 ============================================================================
 
@@ -53,7 +56,7 @@ set hive.merge.mapredfiles = true;
 INSERT INTO TABLE service_security.passenger_order_info
 PARTITION(year,month,day)
 select
-(case when b.passenger_id is null then c.pas_id else b.passenger_id end) as passenger_id,
+(case when a.passenger_id is null then c.pas_id else a.passenger_id end) as passenger_id,
 
 (case when a.passenger_complaint_orders is null then cast(0 as bigint) else a.passenger_complaint_orders end )+
 (case when c.passenger_complaint_orders is null then cast(0 as bigint) else c.passenger_complaint_orders end )as passenger_complaint_orders,
@@ -71,16 +74,9 @@ select
 '$days'
 from
 (
-select passenger_id,year,month,day
-from service_security.complaint_info_com where concat_ws('-',year,month,day)='$start'
-)b
-join
-(
 select pas_id,passenger_complaint_orders,driver_complaint_orders,cancel_before_count,cancel_after_count
 from gulfstream_dw.dw_m_passenger_order where concat_ws('-',year,month,day)='$start'
 )a
-on
-a.pas_id=b.passenger_id
 full outer join
 (
 select pas_id,passenger_complaint_orders,driver_complaint_orders,cancel_before_count,cancel_after_count
@@ -88,6 +84,7 @@ from service_security.passenger_order_info
 where concat_ws('-',year,month,day)='$start1'
 )c
 on c.pas_id=b.passenger_id
+group by
 distribute by(year,month,day);"
 ===============================================================
 INSERT INTO TABLE service_security.passenger_order_info
@@ -142,3 +139,5 @@ distribute by(year,month,day);
 
  select product_id, concat_ws('_',collect_set(promotion_id)) as promotion_ids from product_promotion group by product_id;
  select order_id,concat_ws(';',collect_set(contents) as test from change_car_info group by orderid limit 1;
+
+ dfs  -dus  hdfs://mycluster-tj/user/common_plat_security/

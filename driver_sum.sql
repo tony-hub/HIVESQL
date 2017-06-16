@@ -10,6 +10,9 @@ PARTITIONED BY(
 `year` STRING,
 `month` STRING,
 `day` STRING)
+ROW FORMAT SERDE   'org.apache.hadoop.hive.ql.io.orc.OrcSerde'
+STORED AS INPUTFORMAT   'org.apache.hadoop.hive.ql.io.orc.OrcInputFormat'
+OUTPUTFORMAT   'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
 LOCATION 'hdfs://mycluster-tj/user/common_plat_security/data/service_security/driver_all_info';
 ==============================================================================
 INSERT INTO TABLE service_security.driver_order_info
