@@ -1,3 +1,6 @@
-here type=0 and path not like "%失联%" and path not like "%交通事故%" and path not like "%顺风车%" and product_id in (3 ,4,7);
+
+where type=0 and path not like "%失联%" and path not like "%交通事故%" and path not like "%顺风车%" and product_id in (3 ,4,7);
+
+s
 where type=0 and path not like '%失联%'' and path not like '%交通事故%' and path not like '%延误行程%'
 and path not like '%顺风车%'' and product_id in(3 ,4 ,7) and (order_id is not null) and length(cast(order_id as string))>=6;

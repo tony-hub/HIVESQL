@@ -1,4 +1,4 @@
-CREATE TABLE service_security.major_com
+CREATE TABLE service_security.dlc
 (
 order_id bigint COMMENT'订单ID',
 driver_id bigint COMMENT'司机ID',
@@ -32,6 +32,8 @@ input    int COMMENT'输入',
 is_new   int COMMENT'是否新用户的第一次下单',
 date_type  int COMMENT'周几',
 source_type  int COMMENT'订单来源',
+extra_type int   COMMENT'订单类型扩展字段,代叫车: extra_type&131072=131072',
+peak_type int   COMMENT'峰期类型,1.早高峰（时间：7-10）2.平峰3.晚高峰（时间：17-20)',
 real_time double COMMENT'订单实际计费时长(分)',
 total_recerivetime   int COMMENT'接驾总时长(分)',
 driver_wait_time   double COMMENT'司机等待时间(分)',
@@ -68,6 +70,17 @@ d_two_star_orders   int COMMENT'司机2星评论订单数',
 d_three_star_orders int COMMENT '司机3星评论订单数',
 d_four_star_orders  int COMMENT '司机4星评论订单数',
 d_five_star_orders  int COMMENT '司机5星评论订单数',
+d_city_name  string    COMMENT'司机注册城市',
+d_id_card_no    string    COMMENT'司机身份证',
+d_phone  string    COMMENT'司机电话号码',
+d_local   int   COMMENT'是否为订单地的本地司机 ',
+d_app_list    string    COMMENT'司机app列表 ',
+d_app_type   string    COMMENT'司机app类型 ',
+d_app_num   int       COMMENT'司机敏感app类别数',
+d_phone_brand  string COMMENT'司机手机品牌 ',
+d_accdnt_score double COMMENT'重大投诉评分',
+d_conflict_score double COMMENT'车内冲突评分',
+d_sexualharass_score double COMMENT'性骚扰评分', 
 p_age   int COMMENT'乘客年龄',
 p_gender  int COMMENT'乘客性别',
 p_phone_model  string COMMENT'乘客端',
@@ -89,6 +102,10 @@ p_night_peak   double COMMENT'夜间倾向',
 p_complaint_orders_all int COMMENT'乘客投诉订单总量',
 p_complaint_by_driver_all int COMMENT'乘客被投诉总量',
 p_cancel_after_count int COMMENT '乘客取消订单总量',
+p_consume_type string COMMENT '消费类型',
+p_consume_index  double COMMENT '消费指数',
+p_company_confidence double COMMENT'公司置信度',
+p_home_confidence double COMMENT '家庭置信度',
 complaint_result  int COMMENT'投诉结果',
 valid   int COMMENT'是否有效',
 path    string COMMENT'投诉内容分类路径',
@@ -101,8 +118,14 @@ complaint_type int COMMENT'1表示乘客投诉司机，2表示司机投诉乘客
 customer_type int
 )
 PARTITIONED BY (
-  `year` string,
-  `month` string,
-  `day` string)
-LOCATION
-  'hdfs://mycluster-tj/user/common_plat_security/data/service_security/major_com';
+  year string,
+  month string,
+  day string)
+  
+ROW FORMAT SERDE
+  'org.apache.hadoop.hive.ql.io.orc.OrcSerde'
+STORED AS INPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.orc.OrcInputFormat'
+OUTPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
+LOCATION 'hdfs://mycluster-tj/user/common_plat_security/warehouse/service_security.db/dlc'
